@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 
 public class Server implements Runnable {
 	private Logger log = LoggerFactory.getLogger(Server.class);
-	private String username;
+
 	private int port;
 	private ExecutorService executor;
-	
+
 	public Server(int port, ExecutorService executor) {
 		super();
 		this.port = port;
@@ -38,14 +38,5 @@ public class Server implements Runnable {
 		}
 	}
 
-
-	public String getUsername() {
-		return username;
-	}
-
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
 
 }

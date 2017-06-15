@@ -16,12 +16,12 @@ public class Clients {
 		sockList = Collections.synchronizedList(new ArrayList<Socket>());
 	}
 
-	public synchronized static void addUsers(String m, Socket s) {
+	public synchronized static void addUser(String m, Socket s) {
 		userList.add(m);
 		sockList.add(s);
 	}
 	
-	public synchronized static void removeUsers(String m) {
+	public synchronized static void removeUser(String m) {
 		userList.remove(userList.indexOf(m));
 		sockList.remove(m);
 	}	

@@ -15,8 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cooksys.assessment.model.Message;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ch.qos.logback.classic.util.LevelToSyslogSeverity;
 import ch.qos.logback.core.net.server.ServerListener;
 
 public class ClientHandler implements Runnable {
@@ -24,7 +26,7 @@ public class ClientHandler implements Runnable {
 	private Logger log = LoggerFactory.getLogger(ClientHandler.class);
 	private String username;
 	private Socket socket;
-	Server server;
+
 	
 	public ClientHandler(Socket socket) {
 		super();
@@ -52,17 +54,16 @@ public class ClientHandler implements Runnable {
 					case "connect":
 						
 						log.info("user <{}> connected", message.getUsername());
-//						userlist.put(message.getUsername(), socket);
+
 						break;
 					case "disconnect":
 						log.info("user <{}> disconnected", message.getUsername());
 						this.socket.close();
 						break;
 					case "all":
-//						Socket apple = userlist.get(socket);
-						log.info("user <{}> (all): <{}>", message.getUsername(), message.getContents());
-						
-						String brodcast = mapper.writeValueAsString(message);
+
+						log.info("user <{}> (all): <{}>", message.getUsername(), message.getContents());						
+						String brodcast = mapper.writeValueAsString(message.getContents());
 						writer.write(brodcast);
 						writer.flush();
 						break;
