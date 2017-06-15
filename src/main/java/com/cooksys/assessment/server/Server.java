@@ -3,17 +3,16 @@ package com.cooksys.assessment.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.util.Named;
-
 public class Server implements Runnable {
 	private Logger log = LoggerFactory.getLogger(Server.class);
-	
+	private String username;
 	private int port;
 	private ExecutorService executor;
 	
@@ -22,11 +21,10 @@ public class Server implements Runnable {
 		this.port = port;
 		this.executor = executor;
 	}
-	
-	
+	Map<String, Socket> userlist = new HashMap<>();
+
 	public void run() {
-		Thread.currentThread().setName("server-thread");
-		log.info("server started" + Thread.currentThread().getName());
+		log.info("server started");
 		ServerSocket ss;
 		try {
 			ss = new ServerSocket(this.port);
@@ -38,6 +36,16 @@ public class Server implements Runnable {
 		} catch (IOException e) {
 			log.error("Something went wrong :/", e);
 		}
+	}
+
+
+	public String getUsername() {
+		return username;
+	}
+
+
+	public void setUsername(String username) {
+		this.username = username;
 	}
 
 }

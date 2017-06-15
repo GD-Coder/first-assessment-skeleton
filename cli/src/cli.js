@@ -18,7 +18,7 @@ cli
     username = args.username
     server = connect({ host: 'localhost', port: 8080 }, () => {
       server.write(new Message({ username, command: 'connect' }).toJSON() + '\n')
-      callback()
+      callback(/*When it's all done do this*/)
     })
 
     server.on('data', (buffer) => {
@@ -32,10 +32,15 @@ cli
   .action(function (input, callback) {
     const [ command, ...rest ] = words(input)
     const contents = rest.join(' ')
-
     if (command === 'disconnect') {
       server.end(new Message({ username, command }).toJSON() + '\n')
     } else if (command === 'echo') {
+      server.write(new Message({ username, command, contents }).toJSON() + '\n')
+    } else if (command === 'all') {
+      cli.delimiter(cli.chalk['red'](command))
+    server.write(new Message({ username, command, contents }).toJSON() + '\n')
+    } else if (command === '@') {
+      cli.delimiter(cli.chalk['purple']('whisper>'))
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
     } else {
       this.log(`Command <${command}> was not recognized`)
@@ -43,3 +48,9 @@ cli
 
     callback()
   })
+  // cli
+  //   .mode('all', 'Outputs "duck"')
+  //   .action(function(args, callback) {
+  //     this.log('Duck');
+  //     callback();
+  //   });
