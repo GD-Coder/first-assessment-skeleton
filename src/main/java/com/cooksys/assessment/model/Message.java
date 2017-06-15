@@ -1,10 +1,16 @@
 package com.cooksys.assessment.model;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class Message {
 
 	private String username;
 	private String command;
 	private String contents;
+	private String timestamp;
+	
+	
 
 	public String getUsername() {
 		return username;
@@ -29,5 +35,11 @@ public class Message {
 	public void setContents(String contents) {
 		this.contents = contents;
 	}
+	public String getTimestamp() {
+		return timestamp;
+	}
 
+	public void setTimestamp(String timestamp) {
+		this.timestamp = timestamp;
+	}
 }

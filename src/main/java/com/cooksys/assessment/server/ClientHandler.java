@@ -6,32 +6,22 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cooksys.assessment.model.Message;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ch.qos.logback.classic.util.LevelToSyslogSeverity;
-import ch.qos.logback.core.net.server.ServerListener;
-
 public class ClientHandler implements Runnable {
-	
 	private Logger log = LoggerFactory.getLogger(ClientHandler.class);
-	private String username;
-	private Socket socket;
 
-	
-	public ClientHandler(Socket socket) {
-		super();
-		this.socket = socket;
-	}
+	private Socket socket;
+	private Server server;
+	private String username;
+
 	public String getUsername() {
 		return username;
 	}
@@ -39,46 +29,76 @@ public class ClientHandler implements Runnable {
 	public void setUsername(String username) {
 		this.username = username;
 	}
+
+	public ClientHandler(Socket socket, Server server) {
+		super();
+		this.socket = socket;
+		this.server = server;
+	}
 	public void run() {
 		try {
 
 			ObjectMapper mapper = new ObjectMapper();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
-			PrintWriter textholder = null;
+
 			while (!socket.isClosed()) {
 				String raw = reader.readLine();
 				Message message = mapper.readValue(raw, Message.class);
-
+				
 				switch (message.getCommand()) {
 					case "connect":
-						
-						log.info("user <{}> connected", message.getUsername());
-
+						// Checks to see if the username already exists and rejects it if so
+						if(server.checkDupe(message.getUsername())){
+							message.setContents("dupe");
+							String dupe = mapper.writeValueAsString(message);
+							writer.write(dupe);
+							writer.flush();
+							this.socket.close();
+							// If client username isn't in use, add a new client thread
+						} else {
+						server.addClient(this);
+						setUsername(message.getUsername());
+						server.broadcastSend(message);
+						}
 						break;
+						// Happens when client types disconnect
 					case "disconnect":
-						log.info("user <{}> disconnected", message.getUsername());
+						server.removeClient(this);
+						createTimestamp(message);
+						server.broadcastSend(message);
 						this.socket.close();
 						break;
-					case "all":
-
-						log.info("user <{}> (all): <{}>", message.getUsername(), message.getContents());						
-						String brodcast = mapper.writeValueAsString(message.getContents());
-						writer.write(brodcast);
-						writer.flush();
-						break;
-					case "@*":
-						log.info("user <{}> (all): <{}>", message.getUsername(), message.getContents());
-						
-						String whisper = mapper.writeValueAsString(message);
-						writer.write(whisper);
-						writer.flush();
-						break;
+						// Happens when client types echo
 					case "echo":
-						log.info("user <{}> echoed message <{}>", message.getUsername(), message.getContents());
+						createTimestamp(message);
 						String response = mapper.writeValueAsString(message);
 						writer.write(response);
 						writer.flush();
+						break;
+						// Broadcast message to all logged on users
+					case "broadcast":
+						createTimestamp(message);
+						server.broadcastSend(message);
+						break;
+						// Get a list of users
+					case "users":
+						message.setContents(server.getUsers());
+						createTimestamp(message);
+						String users = mapper.writeValueAsString(message);
+						writer.write(users);
+						writer.flush();
+						break;
+					default:
+						// Issues whisper command 
+						if(message.getCommand().matches("@(.*)")){
+							createTimestamp(message);
+							String command = message.getCommand().replaceAll("[^\\w\\s]", "");
+							server.sendWhisper(message, command);
+							String self = mapper.writeValueAsString(message);
+							writer.write(self);
+							writer.flush();
+						}
 						break;
 				}
 			}
@@ -86,16 +106,19 @@ public class ClientHandler implements Runnable {
 		} catch (IOException e) {
 			log.error("Something went wrong :/", e);
 		}
-		
-		
-		
-	}
-	public void getReply(Message mess) throws IOException {
-		ObjectMapper mapped = new ObjectMapper();
+	}	
+	// Retrieve a message from the CLI and send it to the intended party/parties
+	public void getReply(Message m) throws IOException {
+		ObjectMapper br = new ObjectMapper();
 		PrintWriter broad = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
-		String reply = mapped.writeValueAsString(mess);
-		broad.write(reply);
+		String response = br.writeValueAsString(m);
+		broad.write(response);
 		broad.flush();
 	}
-
+	// Create the timestamp object to append to  the message
+	public void createTimestamp(Message m){
+		String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+		m.setTimestamp(timeStamp);
+	}
+	
 }
