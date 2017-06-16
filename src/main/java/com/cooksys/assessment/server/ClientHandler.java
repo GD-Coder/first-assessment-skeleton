@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cooksys.assessment.model.Message;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ClientHandler implements Runnable {
@@ -21,6 +22,7 @@ public class ClientHandler implements Runnable {
 	private Socket socket;
 	private Server server;
 	private String username;
+
 
 	public String getUsername() {
 		return username;
@@ -58,6 +60,7 @@ public class ClientHandler implements Runnable {
 							// If client username isn't in use, add a new client thread
 						} else {
 						server.addClient(this);
+						createTimestamp(message);
 						setUsername(message.getUsername());
 						server.broadcastSend(message);
 						}
@@ -115,6 +118,7 @@ public class ClientHandler implements Runnable {
 		broad.write(response);
 		broad.flush();
 	}
+	
 	// Create the timestamp object to append to  the message
 	public void createTimestamp(Message m){
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());

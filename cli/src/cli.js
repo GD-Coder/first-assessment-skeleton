@@ -60,6 +60,7 @@ cli
     })
   })
   .action(function (input, callback) {
+    // Holds JSON data from the server
     const [ command, ...rest ] = words(input, /[:;()\\/@.'\w]+/g)
     const contents = rest.join(' ')
     if (command === 'disconnect') {

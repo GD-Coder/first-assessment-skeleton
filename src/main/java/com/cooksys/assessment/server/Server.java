@@ -50,7 +50,7 @@ public class Server implements Runnable {
 	}
 	// Send whisper to specified client
 	public void sendWhisper(Message message, String c) throws IOException {
-		for(ClientHandler h : active){
+		for(ClientHandler h : active ){
 			if(h.getUsername().equals(c)){
 				h.getReply(message);
 			}
